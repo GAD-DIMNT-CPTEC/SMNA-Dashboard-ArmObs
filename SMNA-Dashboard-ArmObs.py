@@ -32,29 +32,45 @@ import hvplot.pandas
 import holoviews as hv
 import panel as pn
 
+from datetime import timedelta
+
 from math import pi
 
 from bokeh.palettes import Category20c, Category20
 from bokeh.plotting import figure
 from bokeh.transform import cumsum
 
+from bokeh.models.widgets.tables import DateFormatter
+
 pn.extension(sizing_mode="stretch_width", notifications=True)
 
 
-# In[10]:
+# In[2]:
 
 
 dfs = pd.read_csv('https://raw.githubusercontent.com/GAD-DIMNT-CPTEC/SMNA-Dashboard-ArmObs/main/mon_rec_obs_final.csv', header=[0], 
                   parse_dates=[('Data do Download'), ('Data da Observação')])
 
 
-# In[11]:
+# In[27]:
+
+
+dfs['Diferença de Tempo'] = (dfs['Data do Download'] - dfs['Data da Observação']) - timedelta(hours=3)
+
+
+# In[28]:
+
+
+dfs['Diferença de Tempo'] = pd.to_timedelta(dfs['Diferença de Tempo'])
+
+
+# In[29]:
 
 
 dfs
 
 
-# In[12]:
+# In[31]:
 
 
 start_date = pd.Timestamp('2023-01-01 00:00:00')
@@ -191,7 +207,51 @@ def getTable(otype_w, ftype_w, synoptic_time, date_range, units_w):
         elif synoptic_time == '00Z, 06Z, 12Z e 18Z':
             dfsp = dfsp.reset_index()      
     
-    df_tb = pn.widgets.DataFrame(dfsp, name='DataFrame', height=600, show_index=True, frozen_rows=0, frozen_columns=2, autosize_mode='fit_viewport', reorderable=True)
+    bokeh_formatters = {
+        'Diferença de Tempo': DateFormatter(format='%d days %H:%M:%S'),
+    }
+
+    # Simples
+#    df_tb = pn.pane.DataFrame(dfsp, 
+#                              name='DataFrame', 
+#                              height=600, 
+#                              bold_rows=True,
+#                              border=15,
+#                              decimal='.',
+#                              index=True,
+#                              show_dimensions=True,
+#                              justify='center',
+#                              sparsify=True,
+#                              sizing_mode='stretch_both',
+#                             )
+    
+    # Avançado
+    df_tb = pn.widgets.DataFrame(dfsp, 
+                                 name='DataFrame', 
+                                 height=600, 
+                                 show_index=True, 
+                                 frozen_rows=0, 
+                                 frozen_columns=2, 
+                                 autosize_mode='force_fit', 
+                                 fit_columns=True,
+                                 formatters=bokeh_formatters,
+                                 auto_edit=False,
+                                 reorderable=True,
+                                 sortable=True,
+                                 text_align='center',
+                                )
+
+    # Muito Avançado (e pesado)
+#    df_tb = pn.widgets.Tabulator(dfsp, 
+#                                 name='DataFrame', 
+#                                 frozen_rows=[0,1],
+#                                 frozen_columns=[2], 
+#                                 pagination=None,
+#                                 selectable='toggle',
+#                                 show_index=True,
+#                                 theme='default',
+#                                 formatters=bokeh_formatters,
+#                                )
     
     return pn.Column(df_tb, sizing_mode="stretch_both")
        
