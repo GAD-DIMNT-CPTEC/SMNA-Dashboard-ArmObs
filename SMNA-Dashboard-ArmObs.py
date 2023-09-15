@@ -52,25 +52,25 @@ dfs = pd.read_csv('https://raw.githubusercontent.com/GAD-DIMNT-CPTEC/SMNA-Dashbo
                   parse_dates=[('Data do Download'), ('Data da Observação')])
 
 
-# In[27]:
+# In[3]:
 
 
 dfs['Diferença de Tempo'] = (dfs['Data do Download'] - dfs['Data da Observação']) - timedelta(hours=3)
 
 
-# In[28]:
+# In[4]:
 
 
 dfs['Diferença de Tempo'] = pd.to_timedelta(dfs['Diferença de Tempo'])
 
 
-# In[29]:
+# In[5]:
 
 
 dfs
 
 
-# In[31]:
+# In[16]:
 
 
 start_date = pd.Timestamp('2023-01-01 00:00:00')
@@ -286,7 +286,10 @@ def plotLine(otype_w, ftype_w, synoptic_time, date_range, units_w):
             
                 df_pl = dfsp.hvplot.line(x='Data da Observação', xlabel='Data', y=n1factor, 
                                      ylabel=str(n2factor), label=str(notype), rot=90, grid=True, 
-                                     line_width=2, height=550, responsive=True)
+                                     line_width=2, height=550, responsive=True,
+                                     color=Category20[20][count])
+            
+                sdf_pl = dfsp.hvplot.scatter(x='Data da Observação', y=n1factor, label=str(notype), height=550, responsive=True, color=Category20[20][count])            
             
             else:
                 
@@ -316,9 +319,12 @@ def plotLine(otype_w, ftype_w, synoptic_time, date_range, units_w):
                     
                 df_pl *= dfsp.hvplot.line(x='Data da Observação', xlabel='Data', y=n1factor, 
                                       ylabel=n2factor, label=str(notype), rot=90, grid=True, 
-                                      line_width=2, height=550, responsive=True)
+                                      line_width=2, height=550, responsive=True,
+                                      color=Category20[20][count])
     
-    return pn.Column(df_pl, sizing_mode='stretch_width')
+                sdf_pl *= dfsp.hvplot.scatter(x='Data da Observação', y=n1factor, label=str(notype), height=550, responsive=True, color=Category20[20][count])
+    
+    return pn.Column(df_pl*sdf_pl, sizing_mode='stretch_width')
 
 @pn.depends(otype_w, ftype_w, synoptic_time, date_range_slider.param.value, units_w)
 def plotSelSize(otype_w, ftype_w, synoptic_time, date_range, units_w):
@@ -353,22 +359,22 @@ def plotSelSize(otype_w, ftype_w, synoptic_time, date_range, units_w):
     data['Tamanho Relativo (%)'] = (data['Tamanho do Download (KB)'] / dfsp_tot_down) * 100
     
     data['angle'] = (data['Tamanho do Download (KB)'] / data['Tamanho do Download (KB)'].sum()) * (2 * pi)
-    #data['color'] = Category20c[len(dfsp_dic_down)]
+    #data['color'] = Category20[len(dfsp_dic_down)]
     #if len(dfsp_dic_down) < 3:
     #    data['color'] = '#ffffff'
     #else:
-    #    data['color'] = Category20c[len(dfsp_dic_down)]
+    #    data['color'] = Category20[len(dfsp_dic_down)]
     if len(dfsp_dic_down) == 0:
         data['color'] = ''
     elif len(dfsp_dic_down) == 1:
         #data['color'] = 'red'
-        data['color'] = Category20c[3][0]
+        data['color'] = Category20[3][0]
     elif len(dfsp_dic_down) == 2:
         #data['color'] = 'blue'
-        data['color'] = Category20c[3][1]
+        data['color'] = Category20[3][1]
     elif len(dfsp_dic_down) > 2:   
-        data['color'] = Category20c[len(dfsp_dic_down)]
-        #data['color'] = Category20c[20][len(dfsp_dic_down)]
+        data['color'] = Category20[len(dfsp_dic_down)]
+        #data['color'] = Category20[20][len(dfsp_dic_down)]
 
     p = figure(height=550, title='Tamanho Relativo (%)', #toolbar_location=None, tools="hover", 
                tooltips="@{Tipo de Observação}: @{Tamanho Relativo (%)}", x_range=(-0.6, 1.15))    
