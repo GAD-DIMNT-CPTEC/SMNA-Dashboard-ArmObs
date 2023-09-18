@@ -15,7 +15,7 @@ async function startApplication() {
   self.pyodide.globals.set("sendPatch", sendPatch);
   console.log("Loaded!");
   await self.pyodide.loadPackage("micropip");
-  const env_spec = ['https://cdn.holoviz.org/panel/1.2.3/dist/wheels/bokeh-3.2.1-py3-none-any.whl', 'https://cdn.holoviz.org/panel/1.2.3/dist/wheels/panel-1.2.3-py3-none-any.whl', 'pyodide-http==0.2.1', 'holoviews', 'hvplot', 'pandas']
+  const env_spec = ['https://cdn.holoviz.org/panel/1.2.3/dist/wheels/bokeh-3.2.2-py3-none-any.whl', 'https://cdn.holoviz.org/panel/1.2.3/dist/wheels/panel-1.2.3-py3-none-any.whl', 'pyodide-http==0.2.1', 'holoviews', 'hvplot', 'pandas']
   for (const pkg of env_spec) {
     let pkg_name;
     if (pkg.endsWith('.whl')) {
@@ -120,7 +120,7 @@ dfs['Diferença de Tempo'] = pd.to_timedelta(dfs['Diferença de Tempo'])
 dfs
 
 
-# In[10]:
+# In[6]:
 
 
 start_date = pd.Timestamp('2023-01-01 00:00:00')
@@ -458,8 +458,8 @@ card_parameters = pn.Card(date_range_slider, synoptic_time, units_w, pn.Column(f
 
 tabs_contents = pn.Tabs(('Gráficos', pn.Row(plotLine, pn.Row(plotSelSize, width=600))), ('Tabela', getTable), dynamic=False)
 
-#pn.template.FastListTemplate(
-pn.template.BootstrapTemplate(
+pn.template.FastListTemplate(
+#pn.template.BootstrapTemplate(
     site="SMNA Dashboard", title="Armazenamento Observações (ArmObs)",
     sidebar = [card_parameters],
     main=["Visualização do armazenamento das observações do **SMNA**", tabs_contents, getTotDown]
