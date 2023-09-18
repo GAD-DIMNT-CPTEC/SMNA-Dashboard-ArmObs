@@ -1,4 +1,4 @@
-importScripts("https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js");
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.23.4/pyc/pyodide.js");
 
 function sendPatch(patch, buffers, msg_id) {
   self.postMessage({
@@ -15,7 +15,7 @@ async function startApplication() {
   self.pyodide.globals.set("sendPatch", sendPatch);
   console.log("Loaded!");
   await self.pyodide.loadPackage("micropip");
-  const env_spec = ['https://cdn.holoviz.org/panel/0.14.3/dist/wheels/bokeh-2.4.3-py3-none-any.whl', 'https://cdn.holoviz.org/panel/0.14.3/dist/wheels/panel-0.14.3-py3-none-any.whl', 'pyodide-http==0.1.0', 'holoviews>=1.15.4', 'holoviews>=1.15.4', 'hvplot', 'pandas']
+  const env_spec = ['https://cdn.holoviz.org/panel/1.2.3/dist/wheels/bokeh-3.2.1-py3-none-any.whl', 'https://cdn.holoviz.org/panel/1.2.3/dist/wheels/panel-1.2.3-py3-none-any.whl', 'pyodide-http==0.2.1', 'holoviews', 'hvplot', 'pandas']
   for (const pkg of env_spec) {
     let pkg_name;
     if (pkg.endsWith('.whl')) {
@@ -92,6 +92,7 @@ from bokeh.transform import cumsum
 from bokeh.models.widgets.tables import DateFormatter
 
 pn.extension(sizing_mode="stretch_width", notifications=True)
+#pn.extension('vizzu')
 
 
 # In[2]:
@@ -119,7 +120,7 @@ dfs['Diferença de Tempo'] = pd.to_timedelta(dfs['Diferença de Tempo'])
 dfs
 
 
-# In[16]:
+# In[10]:
 
 
 start_date = pd.Timestamp('2023-01-01 00:00:00')
@@ -240,6 +241,11 @@ def getTable(otype_w, ftype_w, synoptic_time, date_range, units_w):
    
     factor, n1factor, n2factor, n3factor = unitConvert(units_w)
 
+    #factor = float(1)
+    #n1factor = 'Tamanho do Download (KB)'
+    #n2factor = 'Tamanho (KB)'
+    #n3factor = 'Total Armazenado (KB):'    
+    
     dfs2[n1factor] = dfs2['Tamanho do Download (KB)'].multiply(factor)   
     
     time_fmt0, time_fmt1 = subTimeDataFrame(synoptic_time)
@@ -329,7 +335,12 @@ def plotLine(otype_w, ftype_w, synoptic_time, date_range, units_w):
                     elif synoptic_time == '00Z, 06Z, 12Z e 18Z':
                         dfsp = dfsp.reset_index()              
             
-                factor, n1factor, n2factor, n3factor = unitConvert(units_w)
+                #factor, n1factor, n2factor, n3factor = unitConvert(units_w)
+            
+                factor = float(1 / (1024 ** 2))
+                n1factor = 'Tamanho do Download (MB)'
+                n2factor = 'Tamanho (MB)'
+                n3factor = 'Total Armazenado (MB):'                
             
                 dfsp[n1factor] = dfsp['Tamanho do Download (KB)'].multiply(factor)               
             
@@ -362,7 +373,12 @@ def plotLine(otype_w, ftype_w, synoptic_time, date_range, units_w):
                     elif synoptic_time == '00Z, 06Z, 12Z e 18Z':
                         dfsp = dfsp.reset_index()              
                 
-                factor, n1factor, n2factor, n3factor = unitConvert(units_w)
+                #factor, n1factor, n2factor, n3factor = unitConvert(units_w)
+                
+                factor = float(1 / (1024 ** 2))
+                n1factor = 'Tamanho do Download (MB)'
+                n2factor = 'Tamanho (MB)'
+                n3factor = 'Total Armazenado (MB):'   
                 
                 dfsp[n1factor] = dfsp['Tamanho do Download (KB)'].multiply(factor)                    
                     
@@ -374,7 +390,7 @@ def plotLine(otype_w, ftype_w, synoptic_time, date_range, units_w):
                 sdf_pl *= dfsp.hvplot.scatter(x='Data da Observação', y=n1factor, label=str(notype), height=550, responsive=True, color=Category20[20][count])
     
     return pn.Column(df_pl*sdf_pl, sizing_mode='stretch_width')
-
+        
 @pn.depends(otype_w, ftype_w, synoptic_time, date_range_slider.param.value, units_w)
 def plotSelSize(otype_w, ftype_w, synoptic_time, date_range, units_w):
     start_date, end_date = date_range
@@ -395,7 +411,12 @@ def plotSelSize(otype_w, ftype_w, synoptic_time, date_range, units_w):
         elif synoptic_time == '00Z, 06Z, 12Z e 18Z':
             dfsp = dfsp.reset_index()      
     
-    factor, n1factor, n2factor, n3factor = unitConvert(units_w)
+    #factor, n1factor, n2factor, n3factor = unitConvert(units_w)
+    
+    factor = float(1)
+    n1factor = 'Tamanho do Download (KB)'
+    n2factor = 'Tamanho (KB)'
+    n3factor = 'Total Armazenado (KB):'    
     
     # Tamanho do download (ou do espaço ocupado), de acordo com a seleção da tabela
     dfsp_tot_down = dfsp['Tamanho do Download (KB)'].sum(axis=0)
@@ -408,22 +429,14 @@ def plotSelSize(otype_w, ftype_w, synoptic_time, date_range, units_w):
     data['Tamanho Relativo (%)'] = (data['Tamanho do Download (KB)'] / dfsp_tot_down) * 100
     
     data['angle'] = (data['Tamanho do Download (KB)'] / data['Tamanho do Download (KB)'].sum()) * (2 * pi)
-    #data['color'] = Category20[len(dfsp_dic_down)]
-    #if len(dfsp_dic_down) < 3:
-    #    data['color'] = '#ffffff'
-    #else:
-    #    data['color'] = Category20[len(dfsp_dic_down)]
     if len(dfsp_dic_down) == 0:
         data['color'] = ''
     elif len(dfsp_dic_down) == 1:
-        #data['color'] = 'red'
         data['color'] = Category20[3][0]
     elif len(dfsp_dic_down) == 2:
-        #data['color'] = 'blue'
-        data['color'] = Category20[3][1]
+        data['color'] = Category20[3][:2]
     elif len(dfsp_dic_down) > 2:   
         data['color'] = Category20[len(dfsp_dic_down)]
-        #data['color'] = Category20[20][len(dfsp_dic_down)]
 
     p = figure(height=550, title='Tamanho Relativo (%)', #toolbar_location=None, tools="hover", 
                tooltips="@{Tipo de Observação}: @{Tamanho Relativo (%)}", x_range=(-0.6, 1.15))    
@@ -437,15 +450,16 @@ def plotSelSize(otype_w, ftype_w, synoptic_time, date_range, units_w):
     p.axis.visible=False
     p.grid.grid_line_color=None
 
-    return pn.Column(pn.pane.Bokeh(p))
-         
+    return pn.Column(pn.pane.Bokeh(p))    
+    
 ######    
     
 card_parameters = pn.Card(date_range_slider, synoptic_time, units_w, pn.Column(ftype_w, height=120), pn.Column(otype_w, height=450), title='Parâmetros', collapsed=False)
 
-tabs_contents = pn.Tabs(('Gráficos', pn.Row(plotLine, pn.Row(plotSelSize, width=600))), ('Tabela', getTable))
+tabs_contents = pn.Tabs(('Gráficos', pn.Row(plotLine, pn.Row(plotSelSize, width=600))), ('Tabela', getTable), dynamic=False)
 
-pn.template.FastListTemplate(
+#pn.template.FastListTemplate(
+pn.template.BootstrapTemplate(
     site="SMNA Dashboard", title="Armazenamento Observações (ArmObs)",
     sidebar = [card_parameters],
     main=["Visualização do armazenamento das observações do **SMNA**", tabs_contents, getTotDown]
@@ -492,19 +506,19 @@ self.onmessage = async (event) => {
     _link_docs_worker(state.curdoc, sendPatch, setter='js')
     `)
   } else if (msg.type === 'patch') {
+    self.pyodide.globals.set('patch', msg.patch)
     self.pyodide.runPythonAsync(`
-    import json
-
-    state.curdoc.apply_json_patch(json.loads('${msg.patch}'), setter='js')
+    state.curdoc.apply_json_patch(patch.to_py(), setter='js')
     `)
     self.postMessage({type: 'idle'})
   } else if (msg.type === 'location') {
+    self.pyodide.globals.set('location', msg.location)
     self.pyodide.runPythonAsync(`
     import json
     from panel.io.state import state
     from panel.util import edit_readonly
     if state.location:
-        loc_data = json.loads("""${msg.location}""")
+        loc_data = json.loads(location)
         with edit_readonly(state.location):
             state.location.param.update({
                 k: v for k, v in loc_data.items() if k in state.location.param
