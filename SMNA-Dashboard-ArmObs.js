@@ -1,4 +1,4 @@
-importScripts("https://cdn.jsdelivr.net/pyodide/v0.23.4/pyc/pyodide.js");
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js");
 
 function sendPatch(patch, buffers, msg_id) {
   self.postMessage({
@@ -480,8 +480,8 @@ tabs_contents = pn.Tabs(
     ('Tabela', pn.Column(getTable, pn.layout.Divider(), getTotDown)), 
     dynamic=False)
 
-#pn.template.FastListTemplate(
-pn.template.BootstrapTemplate(
+pn.template.FastListTemplate(
+#pn.template.BootstrapTemplate(
     site="SMNA Dashboard", title="Armazenamento Observações (ArmObs)",
     sidebar = [card_parameters],
     main=["Visualização do armazenamento das observações do **SMNA**", tabs_contents]
