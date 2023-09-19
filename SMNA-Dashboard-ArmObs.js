@@ -15,7 +15,7 @@ async function startApplication() {
   self.pyodide.globals.set("sendPatch", sendPatch);
   console.log("Loaded!");
   await self.pyodide.loadPackage("micropip");
-  const env_spec = ['https://cdn.holoviz.org/panel/0.14.3/dist/wheels/bokeh-2.4.3-py3-none-any.whl', 'https://cdn.holoviz.org/panel/0.14.3/dist/wheels/panel-0.14.3-py3-none-any.whl', 'pyodide-http==0.1.0', 'holoviews>=1.15.4', 'hvplot', 'matplotlib', 'numpy', 'pandas']
+  const env_spec = ['https://cdn.holoviz.org/panel/0.14.3/dist/wheels/bokeh-2.4.3-py3-none-any.whl', 'https://cdn.holoviz.org/panel/0.14.3/dist/wheels/panel-0.14.3-py3-none-any.whl', 'pyodide-http==0.1.0', 'holoviews>=1.15.4', 'holoviews>=1.15.4', 'hvplot', 'numpy', 'pandas']
   for (const pkg of env_spec) {
     let pkg_name;
     if (pkg.endsWith('.whl')) {
@@ -81,6 +81,7 @@ import hvplot.pandas
 import holoviews as hv
 import panel as pn
 import datetime
+import numpy as np
 
 from datetime import timedelta
 
@@ -98,8 +99,9 @@ pn.extension(sizing_mode="stretch_width", notifications=True)
 # In[2]:
 
 
-dfs = pd.read_csv('https://raw.githubusercontent.com/GAD-DIMNT-CPTEC/SMNA-Dashboard-ArmObs/main/mon_rec_obs_final.csv', header=[0], 
-                  parse_dates=[('Data do Download'), ('Data da Observação')])
+#dfs = pd.read_csv('https://raw.githubusercontent.com/GAD-DIMNT-CPTEC/SMNA-Dashboard-ArmObs/main/mon_rec_obs_final.csv', header=[0], 
+#                  parse_dates=[('Data do Download'), ('Data da Observação')])
+dfs = pd.read_csv('mon_rec_obs_final.csv', header=[0], parse_dates=[('Data do Download'), ('Data da Observação')])
 
 
 # In[3]:
@@ -120,7 +122,7 @@ dfs['Diferença de Tempo'] = pd.to_timedelta(dfs['Diferença de Tempo'])
 dfs
 
 
-# In[8]:
+# In[16]:
 
 
 #start_date = pd.Timestamp('2023-01-01 00:00:00')
@@ -287,34 +289,34 @@ def getTable(otype_w, ftype_w, synoptic_time, date_range, units_w):
     }
 
     # Simples
-    df_tb = pn.pane.DataFrame(dfsp, 
-                              name='DataFrame', 
-                              height=600, 
-                              bold_rows=True,
-                              border=15,
-                              decimal='.',
-                              index=True,
-                              show_dimensions=True,
-                              justify='center',
-                              sparsify=True,
-                              sizing_mode='stretch_both',
-                             )
+#    df_tb = pn.pane.DataFrame(dfsp, 
+#                              name='DataFrame', 
+#                              height=600, 
+#                              bold_rows=True,
+#                              border=15,
+#                              decimal='.',
+#                              index=True,
+#                              show_dimensions=True,
+#                              justify='center',
+#                              sparsify=True,
+#                              sizing_mode='stretch_both',
+#                             )
     
     # Avançado
-#    df_tb = pn.widgets.DataFrame(dfsp, 
-#                                 name='DataFrame', 
-#                                 height=600, 
-#                                 show_index=True, 
-#                                 frozen_rows=0, 
-#                                 frozen_columns=2, 
-#                                 autosize_mode='force_fit', 
-#                                 fit_columns=True,
-#                                 formatters=bokeh_formatters,
-#                                 auto_edit=False,
-#                                 reorderable=True,
-#                                 sortable=True,
-#                                 text_align='center',
-#                                )
+    df_tb = pn.widgets.DataFrame(dfsp, 
+                                 name='DataFrame', 
+                                 height=600, 
+                                 show_index=True, 
+                                 frozen_rows=0, 
+                                 frozen_columns=2, 
+                                 autosize_mode='force_fit', 
+                                 fit_columns=True,
+                                 formatters=bokeh_formatters,
+                                 auto_edit=False,
+                                 reorderable=True,
+                                 sortable=True,
+                                 text_align='center',
+                                )
 
     # Muito Avançado (e pesado)
 #    df_tb = pn.widgets.Tabulator(dfsp, 
@@ -367,7 +369,7 @@ def plotLine(otype_w, ftype_w, synoptic_time, date_range):#, units_w):
                 df_pl = dfsp.hvplot.line(x='Data da Observação', xlabel='Data', y=n1factor, 
                                      ylabel=str(n2factor), label=str(notype), rot=90, grid=True, 
                                      line_width=2, height=550, responsive=True,
-                                     color=Category20[20][count])
+                                     color=Category20[20][count], width=850)
             
                 sdf_pl = dfsp.hvplot.scatter(x='Data da Observação', y=n1factor, label=str(notype), height=550, responsive=True, color=Category20[20][count])            
             
@@ -405,7 +407,7 @@ def plotLine(otype_w, ftype_w, synoptic_time, date_range):#, units_w):
                 df_pl *= dfsp.hvplot.line(x='Data da Observação', xlabel='Data', y=n1factor, 
                                       ylabel=n2factor, label=str(notype), rot=90, grid=True, 
                                       line_width=2, height=550, responsive=True,
-                                      color=Category20[20][count])
+                                      color=Category20[20][count], width=850)
     
                 sdf_pl *= dfsp.hvplot.scatter(x='Data da Observação', y=n1factor, label=str(notype), height=550, responsive=True, color=Category20[20][count])
     
@@ -414,8 +416,9 @@ def plotLine(otype_w, ftype_w, synoptic_time, date_range):#, units_w):
 @pn.depends(otype_w, ftype_w, synoptic_time, date_range_slider.param.value)
 def plotSelSize(otype_w, ftype_w, synoptic_time, date_range):
     start_date, end_date = date_range
-    dfs_tmp = dfs.copy()
-    dfs2 = subDataframe(dfs_tmp, start_date, end_date)    
+    #dfs_tmp = dfs.copy()
+    #dfs2 = subDataframe(dfs_tmp, start_date, end_date) 
+    dfs2 = subDataframe(dfs, start_date, end_date) 
     
     time_fmt0, time_fmt1 = subTimeDataFrame(synoptic_time)    
         
@@ -468,7 +471,7 @@ def plotSelSize(otype_w, ftype_w, synoptic_time, date_range):
     p.axis.visible=False
     p.grid.grid_line_color=None
 
-    return pn.Column(pn.pane.Bokeh(p))    
+    return pn.Column(pn.pane.Bokeh(p), sizing_mode='stretch_width')    
     
 ######    
     
@@ -528,19 +531,19 @@ self.onmessage = async (event) => {
     _link_docs_worker(state.curdoc, sendPatch, setter='js')
     `)
   } else if (msg.type === 'patch') {
-    self.pyodide.globals.set('patch', msg.patch)
     self.pyodide.runPythonAsync(`
-    state.curdoc.apply_json_patch(patch.to_py(), setter='js')
+    import json
+
+    state.curdoc.apply_json_patch(json.loads('${msg.patch}'), setter='js')
     `)
     self.postMessage({type: 'idle'})
   } else if (msg.type === 'location') {
-    self.pyodide.globals.set('location', msg.location)
     self.pyodide.runPythonAsync(`
     import json
     from panel.io.state import state
     from panel.util import edit_readonly
     if state.location:
-        loc_data = json.loads(location)
+        loc_data = json.loads("""${msg.location}""")
         with edit_readonly(state.location):
             state.location.param.update({
                 k: v for k, v in loc_data.items() if k in state.location.param
