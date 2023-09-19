@@ -50,9 +50,9 @@ pn.extension(sizing_mode="stretch_width", notifications=True)
 # In[2]:
 
 
-#dfs = pd.read_csv('https://raw.githubusercontent.com/GAD-DIMNT-CPTEC/SMNA-Dashboard-ArmObs/main/mon_rec_obs_final.csv', header=[0], 
-#                  parse_dates=[('Data do Download'), ('Data da Observação')])
-dfs = pd.read_csv('mon_rec_obs_final.csv', header=[0], parse_dates=[('Data do Download'), ('Data da Observação')])
+dfs = pd.read_csv('https://raw.githubusercontent.com/GAD-DIMNT-CPTEC/SMNA-Dashboard-ArmObs/main/mon_rec_obs_final.csv', header=[0], 
+                  parse_dates=[('Data do Download'), ('Data da Observação')])
+#dfs = pd.read_csv('mon_rec_obs_final.csv', header=[0], parse_dates=[('Data do Download'), ('Data da Observação')])
 
 
 # In[3]:
