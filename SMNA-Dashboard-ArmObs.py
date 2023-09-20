@@ -45,6 +45,7 @@ from bokeh.transform import cumsum
 from bokeh.models.widgets.tables import DateFormatter
 
 pn.extension(sizing_mode="stretch_width", notifications=True)
+pn.extension('perspective')
 
 
 # In[2]:
@@ -73,7 +74,7 @@ dfs['Diferença de Tempo'] = pd.to_timedelta(dfs['Diferença de Tempo'])
 dfs
 
 
-# In[16]:
+# In[91]:
 
 
 #start_date = pd.Timestamp('2023-01-01 00:00:00')
@@ -107,12 +108,11 @@ synoptic_time = pn.widgets.RadioBoxGroup(name='Horário', options=synoptic_time_
 date_range = date_range_slider.value
 
 ######
-
 dic_size = {}
 def getSizeDic(dfsp, otype_w):
     dfsp_tot_down_otype = dfsp['Tamanho do Download (KB)'].loc[dfsp['Tipo de Observação'] == otype_w[-1]].sum(axis=0)
     dic_size[otype_w[-1]] = dfsp_tot_down_otype
-    return dic_size    
+    return dic_size       
     
 def subDataframe(df, start_date, end_date):
     mask = (df['Data da Observação'] >= start_date) & (df['Data da Observação'] <= end_date)
@@ -194,7 +194,8 @@ def getTotDown(otype_w, ftype_w, synoptic_time, date_range):#, units_w):
     n2factor = 'Tamanho (GB)'
     n3factor = 'Total Armazenado (GB):'    
     
-    dfsp[n1factor] = dfsp['Tamanho do Download (KB)'].multiply(factor)
+    #dfsp[n1factor] = dfsp['Tamanho do Download (KB)'].multiply(factor)
+    dfsp[n1factor] = dfsp.loc[:, 'Tamanho do Download (KB)'].multiply(factor)
     
     dfsp_tot_down = dfsp[n1factor].sum(axis=0)
     
@@ -219,7 +220,8 @@ def getTable(otype_w, ftype_w, synoptic_time, date_range, units_w):
     #n2factor = 'Tamanho (KB)'
     #n3factor = 'Total Armazenado (KB):'    
     
-    dfs2[n1factor] = dfs2['Tamanho do Download (KB)'].multiply(factor)   
+    #dfs2[n1factor] = dfs2['Tamanho do Download (KB)'].multiply(factor)   
+    dfs2[n1factor] = dfs2.loc[:, 'Tamanho do Download (KB)'].multiply(factor)
     
     time_fmt0, time_fmt1 = subTimeDataFrame(synoptic_time)
     
@@ -245,7 +247,7 @@ def getTable(otype_w, ftype_w, synoptic_time, date_range, units_w):
 #                              height=600, 
 #                              bold_rows=True,
 #                              border=15,
-#                              decimal='.',
+#                              decimal=',',
 #                              index=True,
 #                              show_dimensions=True,
 #                              justify='center',
@@ -254,22 +256,22 @@ def getTable(otype_w, ftype_w, synoptic_time, date_range, units_w):
 #                             )
     
     # Avançado
-    df_tb = pn.widgets.DataFrame(dfsp, 
-                                 name='DataFrame', 
-                                 height=600, 
-                                 show_index=True, 
-                                 frozen_rows=0, 
-                                 frozen_columns=2, 
-                                 autosize_mode='force_fit', 
-                                 fit_columns=True,
-                                 formatters=bokeh_formatters,
-                                 auto_edit=False,
-                                 reorderable=True,
-                                 sortable=True,
-                                 text_align='center',
-                                )
+#    df_tb = pn.widgets.DataFrame(dfsp, 
+#                                 name='DataFrame', 
+#                                 height=600, 
+#                                 show_index=True, 
+#                                 frozen_rows=0, 
+#                                 frozen_columns=2, 
+#                                 autosize_mode='force_fit', 
+#                                 fit_columns=True,
+#                                 formatters=bokeh_formatters,
+#                                 auto_edit=False,
+#                                 reorderable=True,
+#                                 sortable=True,
+#                                 text_align='center',
+#                                )
 
-    # Muito Avançado (e pesado)
+    # Mais Avançado (e pesado)
 #    df_tb = pn.widgets.Tabulator(dfsp, 
 #                                 name='DataFrame', 
 #                                 frozen_rows=[0,1],
@@ -280,6 +282,15 @@ def getTable(otype_w, ftype_w, synoptic_time, date_range, units_w):
 #                                 theme='default',
 #                                 formatters=bokeh_formatters,
 #                                )
+
+
+    df_tb = pn.pane.Perspective(dfsp,
+                               name='DataFrame',
+                               #editable=False,
+                               selectable=True,
+                               theme='material',
+                               toggle_config=False,
+                               height=600)
     
     return pn.Column(df_tb, sizing_mode="stretch_both")
        
@@ -315,14 +326,15 @@ def plotLine(otype_w, ftype_w, synoptic_time, date_range):#, units_w):
                 n2factor = 'Tamanho (MB)'
                 n3factor = 'Total Armazenado (MB):'                
             
-                dfsp[n1factor] = dfsp['Tamanho do Download (KB)'].multiply(factor)               
+                #dfsp[n1factor] = dfsp['Tamanho do Download (KB)'].multiply(factor)   
+                dfsp[n1factor] = dfsp.loc[:, 'Tamanho do Download (KB)'].multiply(factor)
             
                 df_pl = dfsp.hvplot.line(x='Data da Observação', xlabel='Data', y=n1factor, 
                                      ylabel=str(n2factor), label=str(notype), rot=90, grid=True, 
-                                     line_width=2, height=550, responsive=True,
-                                     color=Category20[20][count], width=850)
+                                     line_width=2, min_height=550, responsive=True,
+                                     color=Category20[20][count], min_width=850)
             
-                sdf_pl = dfsp.hvplot.scatter(x='Data da Observação', y=n1factor, label=str(notype), height=550, responsive=True, color=Category20[20][count])            
+                sdf_pl = dfsp.hvplot.scatter(x='Data da Observação', y=n1factor, label=str(notype), min_height=550, responsive=True, color=Category20[20][count])            
             
             else:
                 
@@ -353,17 +365,19 @@ def plotLine(otype_w, ftype_w, synoptic_time, date_range):#, units_w):
                 n2factor = 'Tamanho (MB)'
                 n3factor = 'Total Armazenado (MB):'   
                 
-                dfsp[n1factor] = dfsp['Tamanho do Download (KB)'].multiply(factor)                    
+                #dfsp[n1factor] = dfsp['Tamanho do Download (KB)'].multiply(factor) 
+                dfsp[n1factor] = dfsp.loc[:, 'Tamanho do Download (KB)'].multiply(factor)
                     
                 df_pl *= dfsp.hvplot.line(x='Data da Observação', xlabel='Data', y=n1factor, 
                                       ylabel=n2factor, label=str(notype), rot=90, grid=True, 
-                                      line_width=2, height=550, responsive=True,
-                                      color=Category20[20][count], width=850)
+                                      line_width=2, min_height=550, responsive=True,
+                                      color=Category20[20][count], min_width=850)
     
-                sdf_pl *= dfsp.hvplot.scatter(x='Data da Observação', y=n1factor, label=str(notype), height=550, responsive=True, color=Category20[20][count])
+                sdf_pl *= dfsp.hvplot.scatter(x='Data da Observação', y=n1factor, label=str(notype), min_height=550, responsive=True, color=Category20[20][count])
     
     return pn.Column(df_pl*sdf_pl, sizing_mode='stretch_width')
-        
+       
+    
 @pn.depends(otype_w, ftype_w, synoptic_time, date_range_slider.param.value)
 def plotSelSize(otype_w, ftype_w, synoptic_time, date_range):
     start_date, end_date = date_range
@@ -395,11 +409,16 @@ def plotSelSize(otype_w, ftype_w, synoptic_time, date_range):
     
     dfsp_dic_down = getSizeDic(dfsp, otype_w)
     
+    # Remove a observação da lista a ser plotada         
+    for key in list(dfsp_dic_down):
+        if key not in otype_w:
+            del dfsp_dic_down[key]        
+        
     data = pd.Series(dfsp_dic_down).reset_index(name='Tamanho do Download (KB)').rename(columns={'index':'Tipo de Observação'})  
     
     # Acrescenta uma nova coluna 'Tamanho Relativo' à série data
     data['Tamanho Relativo (%)'] = (data['Tamanho do Download (KB)'] / dfsp_tot_down) * 100
-    
+
     data['angle'] = (data['Tamanho do Download (KB)'] / data['Tamanho do Download (KB)'].sum()) * (2 * pi)
     if len(dfsp_dic_down) == 0:
         data['color'] = ''
@@ -430,21 +449,15 @@ def plotSelSize(otype_w, ftype_w, synoptic_time, date_range):
 card_parameters = pn.Card(date_range_slider, synoptic_time, ftype_w, otype_w, title='Parâmetros', collapsed=False)
 
 tabs_contents = pn.Tabs(
-    ('Gráficos', pn.Column(pn.Row(plotLine, pn.Row(plotSelSize)), pn.layout.Divider(), getTotDown)),
-    ('Tabela', pn.Column(getTable, pn.layout.Divider(), getTotDown)), 
+    ('Gráficos', pn.Column(pn.Row(plotLine, pn.Row(plotSelSize)))),
+    ('Tabela', getTable), 
     dynamic=False)
 
 pn.template.FastListTemplate(
 #pn.template.BootstrapTemplate(
     site="SMNA Dashboard", title="Armazenamento Observações (ArmObs)",
     sidebar = [card_parameters],
-    main=["Visualização do armazenamento das observações do **SMNA**", tabs_contents]
+    main=["Visualização do armazenamento das observações do **SMNA**", tabs_contents, getTotDown]
 #).show();
 ).servable();
-
-
-# In[ ]:
-
-
-
 
