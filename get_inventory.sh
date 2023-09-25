@@ -5,7 +5,7 @@
 inctime=/opt/inctime/bin/inctime
 
 datai=2023010100
-dataf=2023091300
+dataf=2023092400
 
 data=${datai}
 

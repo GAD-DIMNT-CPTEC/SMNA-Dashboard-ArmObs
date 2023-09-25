@@ -38,6 +38,7 @@ from datetime import timedelta
 
 from math import pi
 
+from bokeh import models
 from bokeh.palettes import Category20c, Category20
 from bokeh.plotting import figure
 from bokeh.transform import cumsum
@@ -52,8 +53,9 @@ pn.extension('perspective')
 
 
 dfs = pd.read_csv('https://raw.githubusercontent.com/GAD-DIMNT-CPTEC/SMNA-Dashboard-ArmObs/main/mon_rec_obs_final.csv', header=[0], 
-                  parse_dates=[('Data do Download'), ('Data da Observação')])
-#dfs = pd.read_csv('mon_rec_obs_final.csv', header=[0], parse_dates=[('Data do Download'), ('Data da Observação')])
+                  parse_dates=['Data do Download', 'Data da Observação'])
+
+#dfs = pd.read_csv('mon_rec_obs_final.csv', header=[0], parse_dates=['Data do Download', 'Data da Observação'])
 
 
 # In[3]:
@@ -74,22 +76,11 @@ dfs['Diferença de Tempo'] = pd.to_timedelta(dfs['Diferença de Tempo'])
 dfs
 
 
-# In[91]:
+# In[8]:
 
-
-#start_date = pd.Timestamp('2023-01-01 00:00:00')
-#end_date = pd.Timestamp('2023-09-13 00:00:00')
-
-#date_range_slider = pn.widgets.DateRangeSlider(
-#    name='Intervalo',
-#    start=start_date, end=end_date,
-#    value=(start_date, end_date),
-#    step=24*3600*1000,
-#    orientation='horizontal'
-#)
 
 start_date = datetime.datetime(2023, 1, 1, 0)
-end_date = datetime.datetime(2023, 9, 13, 0)
+end_date = datetime.datetime(2023, 9, 24, 0)
 
 values = (start_date, end_date)
 
@@ -238,22 +229,22 @@ def getTable(otype_w, ftype_w, synoptic_time, date_range, units_w):
             dfsp = dfsp.reset_index()      
     
     bokeh_formatters = {
-        'Diferença de Tempo': DateFormatter(format='%d days %H:%M:%S'),
+        'Diferença de Tempo': models.DateFormatter(format='%d days %H:%M:%S'),
     }
 
     # Simples
-#    df_tb = pn.pane.DataFrame(dfsp, 
-#                              name='DataFrame', 
-#                              height=600, 
-#                              bold_rows=True,
-#                              border=15,
-#                              decimal=',',
-#                              index=True,
-#                              show_dimensions=True,
-#                              justify='center',
-#                              sparsify=True,
-#                              sizing_mode='stretch_both',
-#                             )
+    df_tb = pn.pane.DataFrame(dfsp, 
+                              name='DataFrame', 
+                              height=600, 
+                              bold_rows=True,
+                              border=15,
+                              decimal=',',
+                              index=True,
+                              show_dimensions=True,
+                              justify='center',
+                              sparsify=True,
+                              sizing_mode='stretch_both',
+                             )
     
     # Avançado
 #    df_tb = pn.widgets.DataFrame(dfsp, 
@@ -262,7 +253,7 @@ def getTable(otype_w, ftype_w, synoptic_time, date_range, units_w):
 #                                 show_index=True, 
 #                                 frozen_rows=0, 
 #                                 frozen_columns=2, 
-#                                 autosize_mode='force_fit', 
+#                                autosize_mode='force_fit', 
 #                                 fit_columns=True,
 #                                 formatters=bokeh_formatters,
 #                                 auto_edit=False,
@@ -283,14 +274,16 @@ def getTable(otype_w, ftype_w, synoptic_time, date_range, units_w):
 #                                 formatters=bokeh_formatters,
 #                                )
 
-
-    df_tb = pn.pane.Perspective(dfsp,
-                               name='DataFrame',
-                               #editable=False,
-                               selectable=True,
-                               theme='material',
-                               toggle_config=False,
-                               height=600)
+#    df_tb = pn.pane.Perspective(dfsp,
+#                               name='DataFrame',
+#                               selectable=True,
+#                               theme='material',
+#                               toggle_config=False,
+#                               height=600,
+#                               plugin_config={
+#                                   'Diferença de Tempo': {"timeStyle": "Simple"},
+#                               }
+#                               )
     
     return pn.Column(df_tb, sizing_mode="stretch_both")
        
@@ -331,10 +324,11 @@ def plotLine(otype_w, ftype_w, synoptic_time, date_range):#, units_w):
             
                 df_pl = dfsp.hvplot.line(x='Data da Observação', xlabel='Data', y=n1factor, 
                                      ylabel=str(n2factor), label=str(notype), rot=90, grid=True, 
-                                     line_width=2, min_height=550, responsive=True,
-                                     color=Category20[20][count], min_width=850)
+                                     line_width=2, responsive=True,
+                                     color=Category20[20][count], min_height=550, min_width=850)
             
-                sdf_pl = dfsp.hvplot.scatter(x='Data da Observação', y=n1factor, label=str(notype), min_height=550, responsive=True, color=Category20[20][count])            
+                sdf_pl = dfsp.hvplot.scatter(x='Data da Observação', y=n1factor, label=str(notype), responsive=True, color=Category20[20][count],
+                                             min_height=550, min_width=850)
             
             else:
                 
@@ -370,13 +364,13 @@ def plotLine(otype_w, ftype_w, synoptic_time, date_range):#, units_w):
                     
                 df_pl *= dfsp.hvplot.line(x='Data da Observação', xlabel='Data', y=n1factor, 
                                       ylabel=n2factor, label=str(notype), rot=90, grid=True, 
-                                      line_width=2, min_height=550, responsive=True,
-                                      color=Category20[20][count], min_width=850)
+                                      line_width=2, responsive=True,
+                                      color=Category20[20][count], min_height=550, min_width=850)
     
-                sdf_pl *= dfsp.hvplot.scatter(x='Data da Observação', y=n1factor, label=str(notype), min_height=550, responsive=True, color=Category20[20][count])
+                sdf_pl *= dfsp.hvplot.scatter(x='Data da Observação', y=n1factor, label=str(notype), responsive=True, color=Category20[20][count], 
+                                              min_height=550, min_width=850)
     
     return pn.Column(df_pl*sdf_pl, sizing_mode='stretch_width')
-       
     
 @pn.depends(otype_w, ftype_w, synoptic_time, date_range_slider.param.value)
 def plotSelSize(otype_w, ftype_w, synoptic_time, date_range):
@@ -429,7 +423,7 @@ def plotSelSize(otype_w, ftype_w, synoptic_time, date_range):
     elif len(dfsp_dic_down) > 2:   
         data['color'] = Category20[len(dfsp_dic_down)]
 
-    p = figure(height=550, title='Tamanho Relativo (%)', #toolbar_location=None, tools="hover", 
+    p = figure(min_width=500, min_height=550, title='Tamanho Relativo (%)', #toolbar_location=None, tools="hover", 
                tooltips="@{Tipo de Observação}: @{Tamanho Relativo (%)}", x_range=(-0.6, 1.15))    
     
     r = p.wedge(x=0, y=1, radius=0.55,
@@ -441,23 +435,34 @@ def plotSelSize(otype_w, ftype_w, synoptic_time, date_range):
     p.axis.visible=False
     p.grid.grid_line_color=None
 
-    return pn.Column(pn.pane.Bokeh(p), sizing_mode='stretch_width')    
+    #return pn.Column(pn.pane.Bokeh(p), sizing_mode='stretch_width')    
+    return pn.pane.Bokeh(p)
     
 ######    
     
-#card_parameters = pn.Card(date_range_slider, synoptic_time, units_w, ftype_w, otype_w, title='Parâmetros', collapsed=False)
 card_parameters = pn.Card(date_range_slider, synoptic_time, ftype_w, otype_w, title='Parâmetros', collapsed=False)
 
 tabs_contents = pn.Tabs(
-    ('Gráficos', pn.Column(pn.Row(plotLine, pn.Row(plotSelSize)))),
+    ('Gráficos', pn.Row(plotLine, plotSelSize)),
     ('Tabela', getTable), 
     dynamic=False)
 
 pn.template.FastListTemplate(
-#pn.template.BootstrapTemplate(
     site="SMNA Dashboard", title="Armazenamento Observações (ArmObs)",
     sidebar = [card_parameters],
     main=["Visualização do armazenamento das observações do **SMNA**", tabs_contents, getTotDown]
 #).show();
 ).servable();
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
 
