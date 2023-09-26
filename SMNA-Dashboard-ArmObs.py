@@ -46,7 +46,8 @@ from bokeh.transform import cumsum
 from bokeh.models.widgets.tables import DateFormatter
 
 pn.extension(sizing_mode="stretch_width", notifications=True)
-pn.extension('perspective')
+#pn.extension('perspective')
+pn.extension('tabulator')
 
 
 # In[2]:
@@ -55,7 +56,7 @@ pn.extension('perspective')
 dfs = pd.read_csv('https://raw.githubusercontent.com/GAD-DIMNT-CPTEC/SMNA-Dashboard-ArmObs/main/mon_rec_obs_final.csv', header=[0], 
                   parse_dates=['Data do Download', 'Data da Observação'])
 
-#dfs = pd.read_csv('mon_rec_obs_final.csv', header=[0], parse_dates=['Data do Download', 'Data da Observação'])
+#dfs = pd.read_csv('mon_rec_obs_final.csv', header=[0], parse_dates=['Data do Download', 'Data da Observação', 'Início do Ciclo AD'])
 
 
 # In[3]:
@@ -73,14 +74,20 @@ dfs['Diferença de Tempo'] = pd.to_timedelta(dfs['Diferença de Tempo'])
 # In[5]:
 
 
+dfs = dfs.drop(['Nome do Arquivo'], axis=1)
+
+
+# In[6]:
+
+
 dfs
 
 
-# In[8]:
+# In[7]:
 
 
 start_date = datetime.datetime(2023, 1, 1, 0)
-end_date = datetime.datetime(2023, 9, 24, 0)
+end_date = datetime.datetime(2023, 9, 25, 0)
 
 values = (start_date, end_date)
 
@@ -236,13 +243,16 @@ def getTable(otype_w, ftype_w, synoptic_time, date_range, units_w):
     df_tb = pn.pane.DataFrame(dfsp, 
                               name='DataFrame', 
                               height=600, 
-                              bold_rows=True,
-                              border=15,
+                              #bold_rows=True,
+                              #border=15,
                               decimal=',',
+                              #formatters=bokeh_formatters,
+                              #col_space=10,
+                              #index_names=False,
                               index=True,
                               show_dimensions=True,
-                              justify='center',
-                              sparsify=True,
+                              #justify='center',
+                              #sparsify=True,
                               sizing_mode='stretch_both',
                              )
     
@@ -253,7 +263,7 @@ def getTable(otype_w, ftype_w, synoptic_time, date_range, units_w):
 #                                 show_index=True, 
 #                                 frozen_rows=0, 
 #                                 frozen_columns=2, 
-#                                autosize_mode='force_fit', 
+#                                 autosize_mode='force_fit', 
 #                                 fit_columns=True,
 #                                 formatters=bokeh_formatters,
 #                                 auto_edit=False,
@@ -439,7 +449,23 @@ def plotSelSize(otype_w, ftype_w, synoptic_time, date_range):
     return pn.pane.Bokeh(p)
     
 ######    
-    
+
+notes = """
+### Notas:
+
+* **Data da observação**: refere-se à data do ciclo de análise (e.g., 2023-01-07 00:00:00 representa a análise das 2023010700);
+* **Tamanho do Download**: refere-se ao tamanho em KB (kilobytes) do arquivo de observação armazenado em disco na máquina XC50;
+* **Data do Download**: refere-se à data em que o arquivo de observação foi criado em disco na máquina XC50;
+* **Fuso Horário**: refere-se ao fuso horário de Brasília em relação ao GMT (GMT-3);
+* **Início do Ciclo AD**: refere-se ao horário de início do ciclo de assimilação de dados registrado nas primeiras linhas do arquivo de log do GSI (este arquivo de log é sempre o último gerado, caso outras tentativas de se realizar o sistema tenham sido feitas);
+* **Tipo de Arquivo**: refere-se aos arquivos do tipo `gdas` ou `gfs`. Ambos são disseminados pelo NCEP, mas os arquivos `gdas` possuem mais informações do que os arquivos `gfs`. Os arquivos `gfs` são disseminados antes do que os arquivos `gdas`;
+* **Horário Sinótico**: refere-se ao horário sinótico do ciclo de análise ao qual as observações pertencem;
+* **Tipo de Observação**: refere-se ao mnemônico utilizado pelo GSI para identificar os diferentes tipo de observações;
+* **Diferença de Tempo**: refere-se à diferença entre a data da observação e a data do donwload. Efetivamente, é calculado como: `dfs['Diferença de Tempo'] = (dfs['Data do Download'] - dfs['Data da Observação']) - timedelta(hours=3)`, sendo o `timedelta(hours=3)` subtraído da diferença entre as datas para descontar a diferença do fuso horário.
+
+Além disso, no gráfico de linhas os tamanhos dos arquivos são mostrados em MB (megabytes) e o total armazenado, em GB (gigabytes). Para as conversões entre as unidades (KB para MB e GB), considera-se que 1 MB(GB) = 1024 KB(MB).
+"""
+
 card_parameters = pn.Card(date_range_slider, synoptic_time, ftype_w, otype_w, title='Parâmetros', collapsed=False)
 
 tabs_contents = pn.Tabs(
@@ -450,7 +476,7 @@ tabs_contents = pn.Tabs(
 pn.template.FastListTemplate(
     site="SMNA Dashboard", title="Armazenamento Observações (ArmObs)",
     sidebar = [card_parameters],
-    main=["Visualização do armazenamento das observações do **SMNA**", tabs_contents, getTotDown]
+    main=["Visualização do armazenamento das observações do **SMNA**", tabs_contents, getTotDown, notes]
 #).show();
 ).servable();
 
