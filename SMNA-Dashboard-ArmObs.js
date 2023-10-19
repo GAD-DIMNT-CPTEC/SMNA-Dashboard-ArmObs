@@ -1,4 +1,4 @@
-importScripts("https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js");
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.23.4/pyc/pyodide.js");
 
 function sendPatch(patch, buffers, msg_id) {
   self.postMessage({
@@ -15,7 +15,7 @@ async function startApplication() {
   self.pyodide.globals.set("sendPatch", sendPatch);
   console.log("Loaded!");
   await self.pyodide.loadPackage("micropip");
-  const env_spec = ['https://cdn.holoviz.org/panel/0.14.3/dist/wheels/bokeh-2.4.3-py3-none-any.whl', 'https://cdn.holoviz.org/panel/0.14.3/dist/wheels/panel-0.14.3-py3-none-any.whl', 'pyodide-http==0.1.0', 'holoviews>=1.15.4', 'holoviews>=1.15.4', 'hvplot', 'numpy', 'pandas']
+  const env_spec = ['https://cdn.holoviz.org/panel/1.2.3/dist/wheels/bokeh-3.2.2-py3-none-any.whl', 'https://cdn.holoviz.org/panel/1.2.3/dist/wheels/panel-1.2.3-py3-none-any.whl', 'pyodide-http==0.2.1', 'holoviews', 'hvplot', 'numpy', 'pandas']
   for (const pkg of env_spec) {
     let pkg_name;
     if (pkg.endsWith('.whl')) {
@@ -96,7 +96,7 @@ from bokeh.models.widgets.tables import DateFormatter
 
 pn.extension(sizing_mode="stretch_width", notifications=True)
 #pn.extension('perspective')
-pn.extension('tabulator')
+#pn.extension('tabulator')
 
 
 # In[2]:
@@ -105,38 +105,62 @@ pn.extension('tabulator')
 dfs = pd.read_csv('https://raw.githubusercontent.com/GAD-DIMNT-CPTEC/SMNA-Dashboard-ArmObs/main/mon_rec_obs_final.csv', header=[0], 
                   parse_dates=['Data do Download', 'Data da Observação'])
 
-#dfs = pd.read_csv('mon_rec_obs_final.csv', header=[0], parse_dates=['Data do Download', 'Data da Observação', 'Início do Ciclo AD'])
+#dfs = pd.read_csv('mon_rec_obs_final.csv', header=[0], parse_dates=['Data do Download', 'Data da Observação'])
+
+#dfs_edu = pd.read_csv('mon_rec_obs_final-edu.csv', header=[0], parse_dates=['Data do Download', 'Data da Observação', 'Início do Ciclo AD'])
+#dfs_alex = pd.read_csv('mon_rec_obs_final-alex.csv', header=[0], parse_dates=['Data do Download', 'Data da Observação', 'Início do Ciclo AD'])
+
+
+# In[ ]:
+
+
+#dfs_edu
+
+
+# In[ ]:
+
+
+#dfs_alex
+
+
+# In[ ]:
+
+
+#dfs_edu['Data da Observação'] = pd.to_datetime(dfs_edu['Data da Observação'])
+#dfs_alex['Data da Observação'] = pd.to_datetime(dfs_alex['Data da Observação'])
+
+
+# In[ ]:
+
+
+#dfs_edu['Diferença de Tempo'] = (dfs_edu['Data do Download'] - dfs_edu['Data da Observação']) - timedelta(hours=3)
+#dfs_alex['Diferença de Tempo'] = (dfs_alex['Data do Download'] - dfs_alex['Data da Observação']) - timedelta(hours=3)
+
+
+# In[ ]:
+
+
+#dfs_edu['Diferença de Tempo'] = pd.to_timedelta(dfs_edu['Diferença de Tempo'])
+#dfs_alex['Diferença de Tempo'] = pd.to_timedelta(dfs_alex['Diferença de Tempo'])
 
 
 # In[3]:
 
 
-dfs['Diferença de Tempo'] = (dfs['Data do Download'] - dfs['Data da Observação']) - timedelta(hours=3)
+dfs = dfs.drop(['Nome do Arquivo'], axis=1)
 
 
 # In[4]:
 
 
-dfs['Diferença de Tempo'] = pd.to_timedelta(dfs['Diferença de Tempo'])
+dfs
 
 
 # In[5]:
 
 
-dfs = dfs.drop(['Nome do Arquivo'], axis=1)
-
-
-# In[6]:
-
-
-dfs
-
-
-# In[7]:
-
-
 start_date = datetime.datetime(2023, 1, 1, 0)
-end_date = datetime.datetime(2023, 9, 25, 0)
+end_date = datetime.datetime(2023, 10, 19, 0)
 
 values = (start_date, end_date)
 
@@ -160,7 +184,7 @@ def getSizeDic(dfsp, otype_w):
     dfsp_tot_down_otype = dfsp['Tamanho do Download (KB)'].loc[dfsp['Tipo de Observação'] == otype_w[-1]].sum(axis=0)
     dic_size[otype_w[-1]] = dfsp_tot_down_otype
     return dic_size       
-    
+   
 def subDataframe(df, start_date, end_date):
     mask = (df['Data da Observação'] >= start_date) & (df['Data da Observação'] <= end_date)
     return df.loc[mask]
@@ -575,19 +599,19 @@ self.onmessage = async (event) => {
     _link_docs_worker(state.curdoc, sendPatch, setter='js')
     `)
   } else if (msg.type === 'patch') {
+    self.pyodide.globals.set('patch', msg.patch)
     self.pyodide.runPythonAsync(`
-    import json
-
-    state.curdoc.apply_json_patch(json.loads('${msg.patch}'), setter='js')
+    state.curdoc.apply_json_patch(patch.to_py(), setter='js')
     `)
     self.postMessage({type: 'idle'})
   } else if (msg.type === 'location') {
+    self.pyodide.globals.set('location', msg.location)
     self.pyodide.runPythonAsync(`
     import json
     from panel.io.state import state
     from panel.util import edit_readonly
     if state.location:
-        loc_data = json.loads("""${msg.location}""")
+        loc_data = json.loads(location)
         with edit_readonly(state.location):
             state.location.param.update({
                 k: v for k, v in loc_data.items() if k in state.location.param

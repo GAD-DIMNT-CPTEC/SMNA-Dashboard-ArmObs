@@ -47,7 +47,7 @@ from bokeh.models.widgets.tables import DateFormatter
 
 pn.extension(sizing_mode="stretch_width", notifications=True)
 #pn.extension('perspective')
-pn.extension('tabulator')
+#pn.extension('tabulator')
 
 
 # In[2]:
@@ -56,38 +56,62 @@ pn.extension('tabulator')
 dfs = pd.read_csv('https://raw.githubusercontent.com/GAD-DIMNT-CPTEC/SMNA-Dashboard-ArmObs/main/mon_rec_obs_final.csv', header=[0], 
                   parse_dates=['Data do Download', 'Data da Observação'])
 
-#dfs = pd.read_csv('mon_rec_obs_final.csv', header=[0], parse_dates=['Data do Download', 'Data da Observação', 'Início do Ciclo AD'])
+#dfs = pd.read_csv('mon_rec_obs_final.csv', header=[0], parse_dates=['Data do Download', 'Data da Observação'])
+
+#dfs_edu = pd.read_csv('mon_rec_obs_final-edu.csv', header=[0], parse_dates=['Data do Download', 'Data da Observação', 'Início do Ciclo AD'])
+#dfs_alex = pd.read_csv('mon_rec_obs_final-alex.csv', header=[0], parse_dates=['Data do Download', 'Data da Observação', 'Início do Ciclo AD'])
+
+
+# In[ ]:
+
+
+#dfs_edu
+
+
+# In[ ]:
+
+
+#dfs_alex
+
+
+# In[ ]:
+
+
+#dfs_edu['Data da Observação'] = pd.to_datetime(dfs_edu['Data da Observação'])
+#dfs_alex['Data da Observação'] = pd.to_datetime(dfs_alex['Data da Observação'])
+
+
+# In[ ]:
+
+
+#dfs_edu['Diferença de Tempo'] = (dfs_edu['Data do Download'] - dfs_edu['Data da Observação']) - timedelta(hours=3)
+#dfs_alex['Diferença de Tempo'] = (dfs_alex['Data do Download'] - dfs_alex['Data da Observação']) - timedelta(hours=3)
+
+
+# In[ ]:
+
+
+#dfs_edu['Diferença de Tempo'] = pd.to_timedelta(dfs_edu['Diferença de Tempo'])
+#dfs_alex['Diferença de Tempo'] = pd.to_timedelta(dfs_alex['Diferença de Tempo'])
 
 
 # In[3]:
 
 
-dfs['Diferença de Tempo'] = (dfs['Data do Download'] - dfs['Data da Observação']) - timedelta(hours=3)
+dfs = dfs.drop(['Nome do Arquivo'], axis=1)
 
 
 # In[4]:
 
 
-dfs['Diferença de Tempo'] = pd.to_timedelta(dfs['Diferença de Tempo'])
+dfs
 
 
 # In[5]:
 
 
-dfs = dfs.drop(['Nome do Arquivo'], axis=1)
-
-
-# In[6]:
-
-
-dfs
-
-
-# In[7]:
-
-
 start_date = datetime.datetime(2023, 1, 1, 0)
-end_date = datetime.datetime(2023, 9, 25, 0)
+end_date = datetime.datetime(2023, 10, 19, 0)
 
 values = (start_date, end_date)
 
@@ -111,7 +135,7 @@ def getSizeDic(dfsp, otype_w):
     dfsp_tot_down_otype = dfsp['Tamanho do Download (KB)'].loc[dfsp['Tipo de Observação'] == otype_w[-1]].sum(axis=0)
     dic_size[otype_w[-1]] = dfsp_tot_down_otype
     return dic_size       
-    
+   
 def subDataframe(df, start_date, end_date):
     mask = (df['Data da Observação'] >= start_date) & (df['Data da Observação'] <= end_date)
     return df.loc[mask]

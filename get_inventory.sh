@@ -1,14 +1,19 @@
-#! /bin/bash
+#! /bin/bash 
 
 # Script para recuperar e organizar as informações sobre os dados de
 # observaçao armazenadas e disponíveis para a assimilação de dados
+
+# Na máquina local, montar os discos da seguinte forma:
+# $ cd /extr2
+# $ sshfs carlos_bastarz@login-xc50.cptec.inpe.br:/lustre_xc50/ioper/models/SMNA-Oper/SMG/datainout/gsi/dataout XC50_SMNA_GSI_dataout_preOper/
+# $ sshfs carlos.bastarz@egeon.cptec.inpe.br:/oper/dados/preproc/brutos/model/gdas /extra2/EGEON_PREPROC_BRUTOS
 
 # @cfbastarz (01/09/2023)
 
 inctime=/opt/inctime/bin/inctime
 
 datai=2023010100
-dataf=2023092500
+dataf=2023101900
 
 #datai=2023010800
 #dataf=2023010800
@@ -22,7 +27,8 @@ do
 
   echo ${data}
 
-  dataobs=/extra2/XC50_EXTERNAL/${data}/dataout/NCEP
+  #dataobs=/extra2/XC50_EXTERNAL/${data}/dataout/NCEP
+  dataobs=/extra2/EGEON_PREPROC_BRUTOS/${data:0:4}/${data:4:2}/${data:6:2}
   dataloggsi=/extra2/XC50_SMNA_GSI_dataout_preOper/${data}
 
   ls -l --full-time ${dataobs} > ./txt/obs_${data}.txt
@@ -54,23 +60,26 @@ do
   # Remove a primeira linha
   sed -i '1d' ./txt/obs_${data}.txt
 
+  # Remove linhas cujos nomes dos arquivos de observação não iniciam com "gdas" ou "gfs"
+  grep -vE '\.gdas\b' ./txt/obs_${data}.txt > ./txt/obs_${data}-1.txt
+
   # Formata o arquivo CSV
-  cat ./txt/obs_${data}.txt | awk -F ' ' '{print $5","$6" "$7","sprintf("%1.3s", $8)","$9}' > ./csv/obs_${data}.csv
+  cat ./txt/obs_${data}-1.txt | awk -F ' ' '{print $5","$6" "$7","sprintf("%1.3s", $8)","$9}' > ./csv/obs_${data}.csv
   
   # Remove a primeira linha
   sed -i '1d' ./csv/obs_${data}.csv
 
   # Remove as linhas com as palavras "OK, index, atmanl, sfcanl, rtgsst, oisst, tmp"
-  sed -i '/OK/d' ./csv/obs_${data}.csv
-  sed -i '/index/d' ./csv/obs_${data}.csv
-  sed -i '/atmanl/d' ./csv/obs_${data}.csv
-  sed -i '/sfcanl/d' ./csv/obs_${data}.csv
-  sed -i '/rtgsst/d' ./csv/obs_${data}.csv
-  sed -i '/oisst/d' ./csv/obs_${data}.csv
-  sed -i '/tmp/d' ./csv/obs_${data}.csv
-  sed -i '/lftp-pget-status/d' ./csv/obs_${data}.csv
-  sed -i '/GDAS_/d' ./csv/obs_${data}.csv
-  sed -i '/GBLAV_/d' ./csv/obs_${data}.csv
+#  sed -i '/OK/d' ./csv/obs_${data}.csv
+#  sed -i '/index/d' ./csv/obs_${data}.csv
+#  sed -i '/atmanl/d' ./csv/obs_${data}.csv
+#  sed -i '/sfcanl/d' ./csv/obs_${data}.csv
+#  sed -i '/rtgsst/d' ./csv/obs_${data}.csv
+#  sed -i '/oisst/d' ./csv/obs_${data}.csv
+#  sed -i '/tmp/d' ./csv/obs_${data}.csv
+#  sed -i '/lftp-pget-status/d' ./csv/obs_${data}.csv
+#  sed -i '/GDAS_/d' ./csv/obs_${data}.csv
+#  sed -i '/GBLAV_/d' ./csv/obs_${data}.csv
 
   # Adiciona uma coluna com a data de início do ciclo de assimilação de dados
   gsi_start=$(cat ./csv/gsilog_${data}.csv)
@@ -93,7 +102,8 @@ cat ./mon_rec_obs.csv | awk -F "," '{print $4}' | awk -F "." '{printf ("%s\n", $
 cat ./mon_rec_obs.csv | awk -F "," '{print $4}' | awk -F "." '{printf ("%s\n", $3)}' > otype.txt
 
 # Inclui uma coluna para as datas dos arquivos
-cat ./mon_rec_obs.csv | awk -F "," '{print $4}' | awk -F "." '{print $NF}' | sed 's/^\(.\{4\}\)\(.\{2\}\)/\1-\2-/' > dates.txt
+#cat ./mon_rec_obs.csv | awk -F "," '{print $4}' | awk -F "." '{print $NF}' | sed 's/^\(.\{4\}\)\(.\{2\}\)/\1-\2-/' > dates.txt
+cat ./mon_rec_obs.csv | awk -F "," '{print $2}' | awk -F " " '{print $1}' > dates.txt
 
 # Inclui uma coluna com o horário sinótico formatado (será anexado à data no formato YYYY-HH-DD HH:00:00)
 cat ./mon_rec_obs.csv | awk -F "," '{print $4}' | awk -F "." '{print $2}' | sed 's/t\([0-9][0-9]\)z/\1:00:00/' > hsin2.txt
